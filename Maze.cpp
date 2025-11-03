@@ -1,10 +1,15 @@
 #include "Maze.h"
+#include <cstdlib>
 #include <ctime>
+
+#define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
 Maze::Maze(int row, int col){
   ROW = row;
   COL = col;
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
+  // buat random bisa dipakai berkali kali
+  std::srand(static_cast<unsigned>(std::time(nullptr)));
 }
 
 void Maze::print_config(){
@@ -27,11 +32,9 @@ void Maze::print(){
 
   // Untuk setiap baris
   for (int i = 0; i < ROW; ++i) {
-    // Baris tengah: dinding kiri + isi cell + dinding kanan
-    std::cout << "|";  // dinding kiri dari cell pertama
+    std::cout << "|"; 
     for (int j = 0; j < COL; ++j) {
-      std::cout << "   "; // isi cell (kosong)
-      // dinding kanan
+      std::cout << "   "; 
       if (grid[i][j] & 4) {
         std::cout << "|";
       } else {
@@ -55,11 +58,9 @@ void Maze::print(){
 }
 
 void Maze::fill_with_random_config(){
-  std::srand(static_cast<unsigned>(std::time(nullptr)));
-  std::vector<int> walls = {1, 2, 4, 8}; // kiri, atas, kanan, bawah
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
-      grid[i][j] = walls[std::rand() % (int)walls.size()]; 
+      grid[i][j] = std::rand() % 16; 
 
       // jika ini kolom paling kiri, bangung dinding kiri
       if(j == 0) build_left_wall(grid[i][j]);
@@ -72,11 +73,8 @@ void Maze::fill_with_random_config(){
     }
   }
 
-  print_config();
   normalize();
-  print_config();
-  // repair();
-  // print_config();
+  repair();
 }
 
 // pastikan grid yang terbentuk itu konsisten
@@ -110,13 +108,27 @@ void Maze::repair(){
     for(int j = 0; j < COL; j++){
       if(grid[i][j] != 15) continue;
 
-      std::vector<std::string> candidates;
-      if(j > 0) candidates.push_back("left");
-      if(i > 0) candidates.push_back("top");
-      if(j + 1 < COL) candidates.push_back("right");
-      if(i + 1 < ROW) candidates.push_back("bot");
+      std::vector<short> candidates; // kandidat dinding untuk dibuka
+      if(j > 0) candidates.push_back(1);          // kiri
+      if(i > 0) candidates.push_back(2);          // atas 
+      if(j + 1 < COL) candidates.push_back(4);    // kanan 
+      if(i + 1 < ROW) candidates.push_back(8);    // bawah 
+      
+      // pilih salah satu sisi, lalu hapus dindingnya
+      short wall_to_remove = candidates[std::rand() % (int)candidates.size()];
+      grid[i][j] ^= wall_to_remove; 
+      
+      // perbaiki juga dinding tetangganya
+      if(wall_to_remove == 1) remove_right_wall(grid[i][j-1]);
+      if(wall_to_remove == 2) remove_bot_wall(grid[i-1][j]);
+      if(wall_to_remove == 4) remove_left_wall(grid[i][j+1]);
+      if(wall_to_remove == 8) remove_top_wall(grid[i+1][j]);
     }
   }
+}
+
+bool Maze::has_solution(){
+  return true;
 }
 
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}

@@ -1,7 +1,7 @@
-#include "util.h"
+#include "Util.h"
 #include <iostream>
 
-void greet(const std::string& name) {
+void Util::greet(std::string name) {
     std::cout << "Hello, " << name << "!" << std::endl;
 }
 

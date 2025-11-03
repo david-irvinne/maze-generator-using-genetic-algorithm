@@ -1,8 +1,9 @@
-#include "util.h"
+#include "Util.h"
 #include "Maze.h"
 
 int main() {
-    greet("David");
+    Util util;
+    util.greet("David");
 
     Maze maze = Maze(7, 7); 
     maze.fill_with_random_config();

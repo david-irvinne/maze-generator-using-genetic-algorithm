@@ -10,6 +10,7 @@ public:
   void fill_with_random_config();
   void normalize();
   void repair();
+  bool has_solution();
 
 private:
   int ROW, COL;
