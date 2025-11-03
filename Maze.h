@@ -6,8 +6,10 @@ public:
   Maze(int row, int col);
 
   void print();
+  void print_config();
   void fill_with_random_config();
   void normalize();
+  void repair();
 
 private:
   int ROW, COL;

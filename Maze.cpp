@@ -1,4 +1,5 @@
 #include "Maze.h"
+#include <ctime>
 
 Maze::Maze(int row, int col){
   ROW = row;
@@ -6,7 +7,7 @@ Maze::Maze(int row, int col){
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
 }
 
-void Maze::print(){
+void Maze::print_config(){
   std::cout << "ROW: " << ROW << ' ' << "COL: " << COL << '\n';
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++) std::cout << grid[i][j] << ' ';
@@ -14,17 +15,68 @@ void Maze::print(){
   }
 }
 
+void Maze::print(){
+  if (ROW == 0) return;
+
+  // Baris paling atas (dinding atas semua cell)
+  std::cout << "+";
+  for (int j = 0; j < COL; ++j) {
+    std::cout << (grid[0][j] & 2 ? "---" : "   ") << "+";
+  }
+  std::cout << '\n';
+
+  // Untuk setiap baris
+  for (int i = 0; i < ROW; ++i) {
+    // Baris tengah: dinding kiri + isi cell + dinding kanan
+    std::cout << "|";  // dinding kiri dari cell pertama
+    for (int j = 0; j < COL; ++j) {
+      std::cout << "   "; // isi cell (kosong)
+      // dinding kanan
+      if (grid[i][j] & 4) {
+        std::cout << "|";
+      } else {
+        std::cout << " ";
+      }
+    }
+    std::cout << '\n';
+
+    // Baris bawah: dinding bawah
+    std::cout << "+";
+    for (int j = 0; j < COL; ++j) {
+      if (grid[i][j] & 8) {
+        std::cout << "---";
+      } else {
+        std::cout << "   ";
+      }
+      std::cout << "+";
+    }
+    std::cout << '\n';
+  }
+}
+
 void Maze::fill_with_random_config(){
+  std::srand(static_cast<unsigned>(std::time(nullptr)));
   std::vector<int> walls = {1, 2, 4, 8}; // kiri, atas, kanan, bawah
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
       grid[i][j] = walls[std::rand() % (int)walls.size()]; 
+
+      // jika ini kolom paling kiri, bangung dinding kiri
+      if(j == 0) build_left_wall(grid[i][j]);
+      // jika ini baris paling atas, bangun dinding atas
+      if(i == 0) build_top_wall(grid[i][j]);
+      // jika ini kolom paling kanan, bangung dinding kanan
+      if(j == COL-1) build_right_wall(grid[i][j]);
+      // jika ini baris paling bawah, bangun dinding bawah
+      if(i == ROW-1) build_bot_wall(grid[i][j]);
     }
   }
 
-  print();
+  print_config();
   normalize();
-  print();
+  print_config();
+  // repair();
+  // print_config();
 }
 
 // pastikan grid yang terbentuk itu konsisten
@@ -51,6 +103,20 @@ void Maze::normalize(){
       }
     }
   } 
+}
+
+void Maze::repair(){
+  for(int i = 0; i < ROW; i++){
+    for(int j = 0; j < COL; j++){
+      if(grid[i][j] != 15) continue;
+
+      std::vector<std::string> candidates;
+      if(j > 0) candidates.push_back("left");
+      if(i > 0) candidates.push_back("top");
+      if(j + 1 < COL) candidates.push_back("right");
+      if(i + 1 < ROW) candidates.push_back("bot");
+    }
+  }
 }
 
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}
