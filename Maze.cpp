@@ -1,6 +1,8 @@
 #include "Maze.h"
 #include <cstdlib>
 #include <ctime>
+#include <array>
+#include <queue>
 
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
@@ -127,8 +129,43 @@ void Maze::repair(){
   }
 }
 
-bool Maze::has_solution(){
-  return true;
+int Maze::get_min_distance(){
+  const int INF = 1e9;
+  std::vector<std::vector<int>> dist(ROW, std::vector<int>(COL, INF));
+  std::vector<std::vector<bool>> vis(ROW, std::vector<bool>(COL));
+
+  dist[0][0] = 0;
+  std::queue<std::array<int, 2>> q;
+  q.push({0, 0});
+  while(!q.empty()){
+    auto[now_r, now_c] = q.front();
+    q.pop();
+    if(vis[now_r][now_c]) continue;
+
+    vis[now_r][now_c] = true;
+    // coba pergi ke atas
+    if(!has_top_wall(grid[now_r][now_c])) {
+      q.push({now_r - 1, now_c});
+      dist[now_r - 1][now_c] = std::min(dist[now_r - 1][now_c], dist[now_r][now_c] + 1);
+    }
+    // coba pergi ke bawah
+    if(!has_bot_wall(grid[now_r][now_c])) {
+      q.push({now_r + 1, now_c});
+      dist[now_r + 1][now_c] = std::min(dist[now_r + 1][now_c], dist[now_r][now_c] + 1);
+    }
+    // coba pergi ke kanan
+    if(!has_right_wall(grid[now_r][now_c])) {
+      q.push({now_r , now_c + 1});
+      dist[now_r][now_c + 1] = std::min(dist[now_r][now_c + 1], dist[now_r][now_c] + 1);
+    }
+    // coba pergi ke kiri 
+    if(!has_left_wall(grid[now_r][now_c])) {
+      q.push({now_r , now_c - 1});
+      dist[now_r][now_c - 1] = std::min(dist[now_r][now_c - 1], dist[now_r][now_c] + 1);
+    }
+  }
+
+  return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}

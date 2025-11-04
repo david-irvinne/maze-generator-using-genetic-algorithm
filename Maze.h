@@ -10,7 +10,7 @@ public:
   void fill_with_random_config();
   void normalize();
   void repair();
-  bool has_solution();
+  int get_min_distance();
 
 private:
   int ROW, COL;
