@@ -3,7 +3,9 @@
 
 class Maze {
 public:
-  Maze(int row, int col);
+  int ROW, COL;
+  Maze(int row, int col); // maze dari row dan column baru
+  Maze(std::vector<short>source, int row, int col); // maze dari flatten array
 
   void print();
   void print_config();
@@ -11,9 +13,9 @@ public:
   void normalize();
   void repair();
   int get_min_distance();
+  std::vector<short> get_flatten_config();
 
 private:
-  int ROW, COL;
   std::vector<std::vector<short>> grid;
 
   bool has_left_wall(short conf);

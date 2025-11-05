@@ -10,8 +10,21 @@ Maze::Maze(int row, int col){
   ROW = row;
   COL = col;
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
-  // buat random bisa dipakai berkali kali
-  std::srand(static_cast<unsigned>(std::time(nullptr)));
+}
+
+Maze::Maze(std::vector<short>source, int row, int col){
+  ROW = row;
+  COL = col;
+  grid = std::vector<std::vector<short>>(ROW, std::vector<short>(COL));
+  for(int i = 0, k = 0; i < ROW; i++){
+    for(int j = 0; j < COL; j++){
+      grid[i][j] = source[k];
+      k++;
+    }
+  }
+
+  normalize();
+  repair();
 }
 
 void Maze::print_config(){
@@ -63,26 +76,20 @@ void Maze::fill_with_random_config(){
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
       grid[i][j] = std::rand() % 16; 
-
-      // jika ini kolom paling kiri, bangung dinding kiri
-      if(j == 0) build_left_wall(grid[i][j]);
-      // jika ini baris paling atas, bangun dinding atas
-      if(i == 0) build_top_wall(grid[i][j]);
-      // jika ini kolom paling kanan, bangung dinding kanan
-      if(j == COL-1) build_right_wall(grid[i][j]);
-      // jika ini baris paling bawah, bangun dinding bawah
-      if(i == ROW-1) build_bot_wall(grid[i][j]);
     }
   }
-
   normalize();
   repair();
+  
+  // selagi masih ga solvable, isi dengan config random baru
+  while(get_min_distance() == -1) fill_with_random_config();
 }
 
 // pastikan grid yang terbentuk itu konsisten
 void Maze::normalize(){
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
+
 
       // kalau punya tetangga kanan
       if(j + 1 < COL){
@@ -108,6 +115,16 @@ void Maze::normalize(){
 void Maze::repair(){
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
+
+      // jika ini kolom paling kiri, bangung dinding kiri
+      if(j == 0) build_left_wall(grid[i][j]);
+      // jika ini baris paling atas, bangun dinding atas
+      if(i == 0) build_top_wall(grid[i][j]);
+      // jika ini kolom paling kanan, bangung dinding kanan
+      if(j == COL-1) build_right_wall(grid[i][j]);
+      // jika ini baris paling bawah, bangun dinding bawah
+      if(i == ROW-1) build_bot_wall(grid[i][j]);
+
       if(grid[i][j] != 15) continue;
 
       std::vector<short> candidates; // kandidat dinding untuk dibuka
@@ -209,3 +226,11 @@ void Maze::remove_right_wall(short&cell){
 void Maze::remove_bot_wall(short&cell){
   if(has_bot_wall(cell)) cell ^= 8;
 };
+
+std::vector<short> Maze::get_flatten_config() {
+  std::vector<short> ret;
+  for(int i = 0; i < ROW; i++){
+    for(int j = 0; j < COL; j++) ret.push_back(grid[i][j]);
+  }
+  return ret;
+}
