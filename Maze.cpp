@@ -3,6 +3,9 @@
 #include <ctime>
 #include <array>
 #include <queue>
+#include <algorithm>
+#include <vector>
+#include <cmath>
 
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
@@ -185,97 +188,170 @@ int Maze::get_min_distance(){
   return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
-// Fitness by "human-style" DFS with direction bias and crumbs.
-// Start: (0,0), Goal: (ROW-1,COL-1). Never returns -1.
 int Maze::fitness() {
-  // trivial guard
   if (ROW == 0 || COL == 0) return 0;
 
-  // 0=Up, 1=Right, 2=Down, 3=Left
+  const int SR = 0, SC = 0, GR = ROW - 1, GC = COL - 1;
   const int dr[4] = {-1, 0, 1, 0};
   const int dc[4] = { 0, 1, 0,-1};
 
-  auto in_bounds = [&](int r, int c) {
-    return r >= 0 && r < ROW && c >= 0 && c < COL;
-  };
+  auto in_bounds = [&](int r, int c){ return r>=0 && r<ROW && c>=0 && c<COL; };
 
-  // Check move using your wall-bit helpers (they take a short cell conf)
-  auto can_move = [&](int r, int c, int d) {
+  auto can_move_from = [&](int r, int c, int d){
     short cell = grid[r][c];
-    bool blocked = false;
-    if (d == 0) blocked = has_top_wall(cell);
-    if (d == 1) blocked = has_right_wall(cell);
-    if (d == 2) blocked = has_bot_wall(cell);
-    if (d == 3) blocked = has_left_wall(cell);
-    if (blocked) return false;
+    if (d==0 && has_top_wall(cell))   return false;
+    if (d==1 && has_right_wall(cell)) return false;
+    if (d==2 && has_bot_wall(cell))   return false;
+    if (d==3 && has_left_wall(cell))  return false;
     int nr = r + dr[d], nc = c + dc[d];
     return in_bounds(nr, nc);
   };
 
-  // visited & crumbs
-  std::vector<std::vector<bool>> vis(ROW, std::vector<bool>(COL, false));
-  std::vector<std::vector<int>>  crumbs(ROW, std::vector<int>(COL, 0));
-
-  struct Node { int r, c, d, tried; };
-  std::vector<Node> st;
-  st.reserve(ROW * COL);
-
-  auto left_of    = [](int d){ return (d + 3) & 3; };
-  auto right_of   = [](int d){ return (d + 1) & 3; };
-  auto back_of    = [](int d){ return (d + 2) & 3; };
-  auto forward_of = [](int d){ return d; };
-
-  // initial heading: first open direction around start (0,0), else 0
-  int d0 = 0;
-  for (int d = 0; d < 4; ++d) if (can_move(0, 0, d)) { d0 = d; break; }
-
-  st.push_back({0, 0, d0, 0});
-  vis[0][0] = true;
-  crumbs[0][0] += 1;
-
-  auto bias_order = [&](int d) {
-    // 3 simple bias variants; pick one randomly each step
-    int r = std::rand() % 3;
-    if (r == 0) return std::array<int,4>{ forward_of(d), left_of(d),  right_of(d), back_of(d) };
-    if (r == 1) return std::array<int,4>{ left_of(d),    forward_of(d), right_of(d), back_of(d) };
-    return                 std::array<int,4>{ right_of(d),   forward_of(d), left_of(d),  back_of(d) };
+  auto neighbors = [&](int r, int c, std::array<std::pair<int,int>,4>& out){
+    int m = 0;
+    for (int d=0; d<4; ++d) if (can_move_from(r,c,d)) {
+      out[m++] = {r+dr[d], c+dc[d]};
+    }
+    return m; // count
   };
 
-  const int GR = ROW - 1, GC = COL - 1;
+  auto degree_rc = [&](int r, int c){
+    int deg = 0;
+    short cell = grid[r][c];
+    if (!has_top_wall(cell)   && in_bounds(r-1,c)) ++deg;
+    if (!has_right_wall(cell) && in_bounds(r,c+1)) ++deg;
+    if (!has_bot_wall(cell)   && in_bounds(r+1,c)) ++deg;
+    if (!has_left_wall(cell)  && in_bounds(r,c-1)) ++deg;
+    return deg;
+  };
 
-  while (!st.empty()) {
-    auto &top = st.back();
-    int r = top.r, c = top.c, d = top.d;
+  // -------------------------------
+  // 1) BFS distances + #shortest paths
+  // -------------------------------
+  const int INF = 1e9;
+  std::vector<std::vector<int>> dist(ROW, std::vector<int>(COL, INF));
+  std::vector<std::vector<long long>> ways(ROW, std::vector<long long>(COL, 0));
+  std::vector<std::vector<std::pair<int,int>>> parent(ROW, std::vector<std::pair<int,int>>(COL, {-1,-1}));
+  std::queue<std::pair<int,int>> q;
 
-    if (r == GR && c == GC) {
-      // number of moves = edges along the stack path
-      return (int)st.size() - 1;
+  dist[SR][SC] = 0; ways[SR][SC] = 1;
+  q.push({SR,SC});
+
+  std::array<std::pair<int,int>,4> buff;
+  while(!q.empty()){
+    auto [r,c] = q.front(); q.pop();
+    int cnt = neighbors(r,c,buff);
+    for(int i=0;i<cnt;i++){
+      auto [nr,nc] = buff[i];
+      if (dist[nr][nc] == INF) {
+        dist[nr][nc] = dist[r][c] + 1;
+        ways[nr][nc] = ways[r][c];
+        parent[nr][nc] = {r,c};
+        q.push({nr,nc});
+      } else if (dist[nr][nc] == dist[r][c] + 1) {
+        // another shortest path to (nr,nc)
+        ways[nr][nc] = std::min<long long>(ways[nr][nc] + ways[r][c], 1000000LL); // cap to avoid blowups
+      }
     }
-
-    auto order = bias_order(d);
-    bool moved = false;
-
-    for (int k = top.tried; k < 4; ++k) {
-      int nd = order[k];
-      int nr = r + dr[nd], nc = c + dc[nd];
-
-      if (!can_move(r, c, nd))   continue;
-      if (crumbs[nr][nc] >= 2)   continue;   // avoid over-revisiting
-
-      top.tried = k + 1;                       // we have tried up to k
-      st.push_back({nr, nc, nd, 0});
-      if (!vis[nr][nc]) vis[nr][nc] = true;
-      crumbs[nr][nc] += 1;
-      moved = true;
-      break;
-    }
-
-    if (!moved) st.pop_back();                 // backtrack
   }
 
-  // You said maze is always reachable; fallback (shouldn’t happen).
-  return (int)(1e9);
+  int D = dist[GR][GC];
+  if (D == INF) {
+    return 0;
+  }
+
+  std::vector<std::pair<int,int>> path;
+  {
+    int r = GR, c = GC;
+    path.reserve(D+1);
+    while (r!=-1) {
+      path.push_back({r,c});
+      auto p = parent[r][c];
+      r = p.first; c = p.second;
+    }
+    std::reverse(path.begin(), path.end());
+  }
+
+  //  turns on the shortest path (more turns ⇒ generally harder)
+  auto count_turns = [&](){
+    if ((int)path.size() <= 2) return 0;
+    int turns = 0;
+    for (int i=1;i+1<(int)path.size();++i){
+      int r0=path[i-1].first, c0=path[i-1].second;
+      int r1=path[i].first,   c1=path[i].second;
+      int r2=path[i+1].first, c2=path[i+1].second;
+      int dr1 = r1-r0, dc1 = c1-c0;
+      int dr2 = r2-r1, dc2 = c2-c1;
+      if (dr1!=dr2 || dc1!=dc2) ++turns;
+    }
+    return turns;
+  };
+
+  int T = count_turns();
+
+  // For each path cell, count open neighbors that are NOT the prev/next path cell.
+  int side_exits = 0;
+  {
+    std::vector<std::vector<char>> on_path(ROW, std::vector<char>(COL, 0));
+    for (auto &p : path) on_path[p.first][p.second] = 1;
+
+    for (int i=0;i<(int)path.size();++i){
+      int r = path[i].first, c = path[i].second;
+      int prev_r = (i>0) ? path[i-1].first : -1;
+      int prev_c = (i>0) ? path[i-1].second: -1;
+      int next_r = (i+1<(int)path.size()) ? path[i+1].first : -1;
+      int next_c = (i+1<(int)path.size()) ? path[i+1].second: -1;
+
+      std::array<std::pair<int,int>,4> ns;
+      int cnt = neighbors(r,c,ns);
+      for(int k=0;k<cnt;k++){
+        int nr = ns[k].first, nc = ns[k].second;
+        if (!((nr==prev_r && nc==prev_c) || (nr==next_r && nc==next_c))) {
+          ++side_exits; // a branch or loop entry leaving the solution corridor
+        }
+      }
+    }
+  }
+
+  // overall dead-ends (degree == 1), excluding S and G
+  int dead_ends = 0;
+  for (int r=0;r<ROW;++r){
+    for (int c=0;c<COL;++c){
+      if ((r==SR && c==SC) || (r==GR && c==GC)) continue;
+      if (degree_rc(r,c) == 1) ++dead_ends;
+    }
+  }
+
+  // number of distinct shortest paths (ways to (GR,GC) from BFS)
+  long long shortest_paths = ways[GR][GC]; // >=1 if reachable
+
+  //“single corridor” check: along the path, are there zero side exits?
+  bool single_corridor = (side_exits == 0);
+
+  // Normalize some terms roughly:
+  const double Dnorm = (double)D / (double)(ROW*COL);                 // 0..~1
+  const double Tnorm = (double)T / (double)std::max(1, D);            // turns per step
+  const double BranchNorm = (double)side_exits / (double)std::max(1, (int)path.size());
+  const double DeadNorm = (double)dead_ends / (double)std::max(1, ROW*COL);
+
+  // Reward: long path, many turns, many side exits (decoys), many dead ends.
+  // Penalize: having only 1 shortest path (no alternative routes) and single-corridor paths.
+  // (You said: “if only one path leads to finish it should be easier” → we penalize it.)
+  double score =
+      1.20 * Dnorm +
+      0.90 * Tnorm +
+      1.10 * BranchNorm +
+      0.60 * DeadNorm
+      - 0.50 * (shortest_paths <= 1 ? 1.0 : 0.0)
+      - 0.80 * (single_corridor ? 1.0 : 0.0);
+
+  // Scale to int for GA
+  int scaled = (int)std::round(score * 1000.0);
+  if (scaled < 0) scaled = 0;
+  return scaled;
 }
+
+
 
 
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}
