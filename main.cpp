@@ -11,13 +11,15 @@ int main() {
   Maze maze = Maze(ROW_SIZE, COL_SIZE); 
   maze.fill_with_random_config();
   maze.print();
-  std::cout << maze.get_min_distance() << '\n';
+  std::cout << "distance : " <<  maze.get_min_distance() << '\n';
+  std::cout << "fitness : " << maze.fitness() << '\n';
   std::cout << "\n";
 
   Maze maze2 = Maze(ROW_SIZE, COL_SIZE);
   maze2.fill_with_random_config();
   maze2.print();
-  std::cout << maze2.get_min_distance() << '\n';
+  std::cout << "distance : " << maze2.get_min_distance() << '\n';
+  std::cout << "fitness : " << maze2.fitness() << '\n';
   std::cout << '\n';
     
   Util GA; 

@@ -13,6 +13,7 @@ public:
   void normalize();
   void repair();
   int get_min_distance();
+  int fitness();
   std::vector<short> get_flatten_config();
 
 private:

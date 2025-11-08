@@ -185,6 +185,99 @@ int Maze::get_min_distance(){
   return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
+// Fitness by "human-style" DFS with direction bias and crumbs.
+// Start: (0,0), Goal: (ROW-1,COL-1). Never returns -1.
+int Maze::fitness() {
+  // trivial guard
+  if (ROW == 0 || COL == 0) return 0;
+
+  // 0=Up, 1=Right, 2=Down, 3=Left
+  const int dr[4] = {-1, 0, 1, 0};
+  const int dc[4] = { 0, 1, 0,-1};
+
+  auto in_bounds = [&](int r, int c) {
+    return r >= 0 && r < ROW && c >= 0 && c < COL;
+  };
+
+  // Check move using your wall-bit helpers (they take a short cell conf)
+  auto can_move = [&](int r, int c, int d) {
+    short cell = grid[r][c];
+    bool blocked = false;
+    if (d == 0) blocked = has_top_wall(cell);
+    if (d == 1) blocked = has_right_wall(cell);
+    if (d == 2) blocked = has_bot_wall(cell);
+    if (d == 3) blocked = has_left_wall(cell);
+    if (blocked) return false;
+    int nr = r + dr[d], nc = c + dc[d];
+    return in_bounds(nr, nc);
+  };
+
+  // visited & crumbs
+  std::vector<std::vector<bool>> vis(ROW, std::vector<bool>(COL, false));
+  std::vector<std::vector<int>>  crumbs(ROW, std::vector<int>(COL, 0));
+
+  struct Node { int r, c, d, tried; };
+  std::vector<Node> st;
+  st.reserve(ROW * COL);
+
+  auto left_of    = [](int d){ return (d + 3) & 3; };
+  auto right_of   = [](int d){ return (d + 1) & 3; };
+  auto back_of    = [](int d){ return (d + 2) & 3; };
+  auto forward_of = [](int d){ return d; };
+
+  // initial heading: first open direction around start (0,0), else 0
+  int d0 = 0;
+  for (int d = 0; d < 4; ++d) if (can_move(0, 0, d)) { d0 = d; break; }
+
+  st.push_back({0, 0, d0, 0});
+  vis[0][0] = true;
+  crumbs[0][0] += 1;
+
+  auto bias_order = [&](int d) {
+    // 3 simple bias variants; pick one randomly each step
+    int r = std::rand() % 3;
+    if (r == 0) return std::array<int,4>{ forward_of(d), left_of(d),  right_of(d), back_of(d) };
+    if (r == 1) return std::array<int,4>{ left_of(d),    forward_of(d), right_of(d), back_of(d) };
+    return                 std::array<int,4>{ right_of(d),   forward_of(d), left_of(d),  back_of(d) };
+  };
+
+  const int GR = ROW - 1, GC = COL - 1;
+
+  while (!st.empty()) {
+    auto &top = st.back();
+    int r = top.r, c = top.c, d = top.d;
+
+    if (r == GR && c == GC) {
+      // number of moves = edges along the stack path
+      return (int)st.size() - 1;
+    }
+
+    auto order = bias_order(d);
+    bool moved = false;
+
+    for (int k = top.tried; k < 4; ++k) {
+      int nd = order[k];
+      int nr = r + dr[nd], nc = c + dc[nd];
+
+      if (!can_move(r, c, nd))   continue;
+      if (crumbs[nr][nc] >= 2)   continue;   // avoid over-revisiting
+
+      top.tried = k + 1;                       // we have tried up to k
+      st.push_back({nr, nc, nd, 0});
+      if (!vis[nr][nc]) vis[nr][nc] = true;
+      crumbs[nr][nc] += 1;
+      moved = true;
+      break;
+    }
+
+    if (!moved) st.pop_back();                 // backtrack
+  }
+
+  // You said maze is always reachable; fallback (shouldn’t happen).
+  return (int)(1e9);
+}
+
+
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}
 bool Maze::has_left_wall(short conf){
   return (conf >> 0) & 1; 
