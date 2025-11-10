@@ -34,4 +34,38 @@ std::pair<std::vector<short>, std::vector<short>> Util::simple_arithmetic_crosso
     return {child1, child2};
 }
 
+std::pair<std::vector<short>, std::vector<short>> Util::uniform_biased_crossover(
+    std::vector<short> parent1,
+    std::vector<short> parent2
+){
+    const int sz = static_cast<int>(parent1.size());
+    std::vector<short> child1 = parent1;
+    std::vector<short> child2 = parent2;
+
+    // Bias toward parent1 (assume parent1 is fitter or preferred)
+    const float bias = 0.70f; // tweakable
+
+    for (int i = 0; i < sz; ++i) {
+        float u = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+
+        // If we take from parent1 for child1, take from parent2 for child2 (complementary)
+        if (u < bias) {
+            child1[i] = parent1[i];
+            child2[i] = parent2[i];
+        } else {
+            child1[i] = parent2[i];
+            child2[i] = parent1[i];
+        }
+
+        // Clamp to valid wall-mask range [1, 15]
+        if (child1[i] < 1)  child1[i] = 1;
+        if (child1[i] > 15) child1[i] = 15;
+        if (child2[i] < 1)  child2[i] = 1;
+        if (child2[i] > 15) child2[i] = 15;
+    }
+
+    return { child1, child2 };
+}
+
+
 

@@ -24,9 +24,13 @@ int main() {
     
   Util GA; 
   auto[child1, child2] = GA.simple_arithmetic_crossover(maze.get_flatten_config(), maze2.get_flatten_config());
+  auto[child3, child4] = GA.uniform_biased_crossover(maze.get_flatten_config(), maze2.get_flatten_config());
+
 
   Maze maze3 = Maze(child1, ROW_SIZE, COL_SIZE);
   Maze maze4 = Maze(child2, ROW_SIZE, COL_SIZE);
+  Maze maze5 = Maze(child3, ROW_SIZE, COL_SIZE);
+  Maze maze6 = Maze(child4, ROW_SIZE, COL_SIZE);
 
   maze3.print();
   // std::cout << maze3.get_min_distance() << '\n';
@@ -35,6 +39,9 @@ int main() {
   maze4.print();
   // std::cout << maze4.get_min_distance() << '\n';
   // std::cout << "\n";
+  std::cout << "hi\n";
+  maze5.print();
+  maze6.print();  
     
   return 0;
 }
