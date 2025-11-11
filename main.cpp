@@ -51,7 +51,7 @@ int main() {
     std::cout << "hasil terbaik dari gen " << GEN << ":\n";
     Maze& best_maze = Util::get_best_maze(populasi);
     best_maze.print();
-    std::cout << best_maze.fitness_value << '\n';
+    std::cout << "BEST FITNESS: " << best_maze.fitness_value << "\n\n";
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
