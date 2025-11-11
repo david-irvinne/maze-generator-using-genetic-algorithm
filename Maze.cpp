@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <cassert>
 
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
@@ -188,7 +189,7 @@ int Maze::get_min_distance(){
   return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
-int Maze::fitness() {
+double Maze::fitness() {
   if (ROW == 0 || COL == 0) return 0;
 
   const int SR = 0, SC = 0, GR = ROW - 1, GC = COL - 1;
@@ -345,11 +346,17 @@ int Maze::fitness() {
       - 0.50 * (shortest_paths <= 1 ? 1.0 : 0.0)
       - 0.80 * (single_corridor ? 1.0 : 0.0);
 
-  // Scale to int for GA
   int scaled = (int)std::round(score * 1000.0);
   if (scaled < 0) scaled = 0;
-  return scaled;
+  assert(ROW==COL);
+  const double N2 = 1.0 * ROW * ROW;
+  const double score_upper_excl = 4.9 - 4.6 / N2 - 0.9 / (N2 - 1.0); // strictly greater-than ceiling
+  const int upper_bound = static_cast<int>(std::ceil(score_upper_excl * 1000.0) - 1.0);
+  const double mid = (upper_bound) / 2.0;
+  return 1.0 * abs(scaled - mid) / mid ;
 }
+
+
 
 
 
