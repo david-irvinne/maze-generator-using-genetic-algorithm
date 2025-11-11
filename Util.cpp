@@ -14,9 +14,6 @@ std::pair<std::vector<short>, std::vector<short>> Util::simple_arithmetic_crosso
     int K = std::rand() % sz; 
     // choose random a (factor untuk crossover)
     float a = (float)std::rand() / RAND_MAX;
-    std::cout << "this is k: " << K << '\n';
-    std::cout << "this is a: " << a << '\n';
-    std::cout << "this is sz: " << sz << '\n';
     for(int i = 0; i < sz; i++){
       if(i < K) continue; // tidak ada crossover
       else {
@@ -67,5 +64,24 @@ std::pair<std::vector<short>, std::vector<short>> Util::uniform_biased_crossover
     return { child1, child2 };
 }
 
+Maze& Util::tournament_selection(std::vector<Maze>& populasi, int k){
+  int best_idx = rand() % populasi.size();
+  
+  // di antara k random pilihan, cari yang terbaik
+  for(int i = 1; i < k; i++){
+    int idx = rand() % populasi.size();
+    if(populasi[idx].fitness_value < populasi[best_idx].fitness_value){
+      best_idx = idx;
+    }
+  }
+  return populasi[best_idx];
+}
 
+Maze& Util::get_best_maze(std::vector<Maze>& populasi){
+  Maze& res = populasi[0];
+  for(auto& individu : populasi){
+    if(individu.fitness_value < res.fitness_value) res = individu;
+  }
+  return res;
+}
 

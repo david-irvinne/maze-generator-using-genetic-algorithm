@@ -26,6 +26,8 @@ Maze::Maze(int row, int col){
   
   // selagi masih ga solvable, isi dengan config random baru
   while(get_min_distance() == -1) fill_with_random_config();
+
+  fitness_value = fitness();
 }
 
 Maze::Maze(std::vector<short>source, int row, int col){
@@ -41,6 +43,7 @@ Maze::Maze(std::vector<short>source, int row, int col){
 
   normalize();
   repair();
+  fitness_value = fitness();
 }
 
 void Maze::print_config(){
@@ -202,7 +205,8 @@ int Maze::get_min_distance(){
 }
 
 double Maze::fitness() {
-  if (ROW == 0 || COL == 0) return 0;
+  if (ROW == 0 || COL == 0) return 1;    // not shaped
+  if(get_min_distance() == -1) return 1; // no solution
 
   const int SR = 0, SC = 0, GR = ROW - 1, GC = COL - 1;
   const int dr[4] = {-1, 0, 1, 0};
