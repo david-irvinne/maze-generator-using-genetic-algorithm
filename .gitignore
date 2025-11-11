@@ -1,4 +1,11 @@
+# Abaikan semua file
 *
+
+# Tapi jangan abaikan folder (biar struktur folder tetap di Git)
 !*/
+
+# Jangan abaikan semua file biasa
 !*.*
 
+# Tapi abaikan semua file .exe di mana pun berada
+*.exe

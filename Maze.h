@@ -4,6 +4,7 @@
 class Maze {
 public:
   int ROW, COL;
+  Maze();
   Maze(int row, int col); // maze dari row dan column baru
   Maze(std::vector<short>source, int row, int col); // maze dari flatten array
 

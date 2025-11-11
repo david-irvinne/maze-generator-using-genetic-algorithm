@@ -1,6 +1,5 @@
 #include "Maze.h"
 #include <cstdlib>
-#include <ctime>
 #include <array>
 #include <queue>
 #include <algorithm>
@@ -10,10 +9,23 @@
 
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
+Maze::Maze() {
+    ROW = 0;
+    COL = 0;
+}
+
 Maze::Maze(int row, int col){
   ROW = row;
   COL = col;
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
+  
+  // isi dengan random config yang punya solusi
+  fill_with_random_config();
+  normalize();
+  repair();
+  
+  // selagi masih ga solvable, isi dengan config random baru
+  while(get_min_distance() == -1) fill_with_random_config();
 }
 
 Maze::Maze(std::vector<short>source, int row, int col){
