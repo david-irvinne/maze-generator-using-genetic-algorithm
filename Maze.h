@@ -1,5 +1,16 @@
 #include<iostream>
 #include<vector>
+#include <cstdlib>
+#include <array>
+#include <queue>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cassert>
+#include <stack>
+#include <set>
+#include <random>
+#include <chrono>
 
 class Maze {
 public:
@@ -14,8 +25,10 @@ public:
   void fill_with_random_config();
   void normalize();
   void repair();
+  void update_fitness_value();
   int get_min_distance();
   double fitness();
+  double fitness2();
   std::vector<short> get_flatten_config();
 
 private:

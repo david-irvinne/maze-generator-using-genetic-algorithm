@@ -1,17 +1,14 @@
 #include "Maze.h"
-#include <cstdlib>
-#include <array>
-#include <queue>
-#include <algorithm>
-#include <vector>
-#include <cmath>
-#include <cassert>
 
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
 Maze::Maze() {
     ROW = 0;
     COL = 0;
+}
+
+void Maze::update_fitness_value(){
+  fitness_value = fitness2();
 }
 
 Maze::Maze(int row, int col){
@@ -27,7 +24,7 @@ Maze::Maze(int row, int col){
   // selagi masih ga solvable, isi dengan config random baru
   while(get_min_distance() == -1) fill_with_random_config();
 
-  fitness_value = fitness();
+  update_fitness_value();
 }
 
 Maze::Maze(std::vector<short>source, int row, int col){
@@ -43,7 +40,7 @@ Maze::Maze(std::vector<short>source, int row, int col){
 
   normalize();
   repair();
-  fitness_value = fitness();
+  update_fitness_value();
 }
 
 void Maze::print_config(){
@@ -369,13 +366,82 @@ double Maze::fitness() {
   const double score_upper_excl = 4.9 - 4.6 / N2 - 0.9 / (N2 - 1.0); // strictly greater-than ceiling
   const int upper_bound = static_cast<int>(std::ceil(score_upper_excl * 1000.0) - 1.0);
   const double mid = (upper_bound) / 2.0;
-  return 1.0 * abs(scaled - mid) / mid ;
+  // return 1.0 * abs(scaled - mid) / mid ;
+  return 1.0 * scaled / upper_bound;
+  // return 1.0 * (upper_bound - scaled) / upper_bound;
 }
 
+double Maze::fitness2() {
+  if (ROW == 0 || COL == 0) return 1.0;
+  if (get_min_distance() == -1) return 1.0; // tidak solvable
 
+  auto in_bounds = [&](int r, int c){ return r >= 0 && r < ROW && c >= 0 && c < COL; };
 
+  auto neighbors = [&](int r, int c){
+    std::vector<std::pair<int,int>> n;
+    short cell = grid[r][c];
+    if (!has_top_wall(cell)   && in_bounds(r-1, c)) n.push_back({r-1, c});
+    if (!has_right_wall(cell) && in_bounds(r, c+1)) n.push_back({r, c+1});
+    if (!has_bot_wall(cell)   && in_bounds(r+1, c)) n.push_back({r+1, c});
+    if (!has_left_wall(cell)  && in_bounds(r, c-1)) n.push_back({r, c-1});
+    return n;
+  };
 
+  // RNG (lebih baik daripada rand())
+  std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
+  auto simulate = [&](int max_steps = 100000) {
+    std::stack<std::pair<int,int>> path;
+    std::set<std::pair<int,int>> visited;
+
+    std::pair<int,int> start = {0,0};
+    std::pair<int,int> goal = {ROW-1, COL-1};
+    path.push(start);
+    visited.insert(start);
+
+    int steps = 0;
+    while (!path.empty() && steps < max_steps) {
+      auto [r, c] = path.top();
+      if (r == goal.first && c == goal.second) break;
+
+      auto n = neighbors(r, c);
+      std::vector<std::pair<int,int>> unvisited;
+      for (auto &p : n) if (!visited.count(p)) unvisited.push_back(p);
+
+      if (!unvisited.empty()) {
+        std::uniform_int_distribution<int> dist(0, (int)unvisited.size() - 1);
+        auto next = unvisited[dist(rng)];
+        visited.insert(next);
+        path.push(next);
+      } else {
+        path.pop(); // buntu, backtrack
+      }
+      steps++;
+    }
+
+    // Jika tidak sampai tujuan, berikan penalti besar
+    if (path.empty()) return (double)max_steps;
+    return (double)steps;
+  };
+
+  // Jalankan beberapa kali agar hasil stabil
+  const int TRIALS = 8;
+  double total_steps = 0;
+  for (int i = 0; i < TRIALS; ++i) {
+    total_steps += simulate();
+  }
+  double cost_value = total_steps / TRIALS;
+
+  // Hitung fitness berbasis target kesulitan menengah
+  double lower_bound = (double)(ROW + COL - 1);            // minimal mungkin (jalur lurus)
+  double upper_bound = (double)(ROW * COL * 1.8);             // perkiraan atas: banyak backtrack
+  double mid = (lower_bound + upper_bound) / 2.0;
+
+  double fitness = std::fabs(cost_value - mid) / mid;
+  if (fitness > 1.0) fitness = 1.0;
+
+  return fitness;
+}
 
 // {1, 2, 4, 8} -> {kiri, atas, kanan, bawah}
 bool Maze::has_left_wall(short conf){

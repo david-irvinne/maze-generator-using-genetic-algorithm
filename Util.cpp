@@ -1,4 +1,5 @@
 #include "Util.h"
+#include <cmath>
 #include <iostream>
 #include<vector>
 
@@ -83,5 +84,14 @@ Maze& Util::get_best_maze(std::vector<Maze>& populasi){
     if(individu.fitness_value < res.fitness_value) res = individu;
   }
   return res;
+}
+
+// cek kalau semua fitness value dari sebuah populasi udah sama 
+bool Util::check_convergence(std::vector<Maze>& populasi){
+  bool converges = true;
+  for(int i = 0; i < (int)populasi.size() - 1; i++){
+    converges &= populasi[i].fitness_value == populasi[i + 1].fitness_value;
+  }
+  return converges;
 }
 
