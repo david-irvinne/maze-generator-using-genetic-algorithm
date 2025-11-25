@@ -24,8 +24,10 @@ int main() {
   std::vector<Maze> new_populasi;
   for(int GEN = 0; GEN < MAX_GENERATION; GEN++){
     while(new_populasi.size() < populasi.size()){
-      Maze& parent1 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
-      Maze& parent2 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
+      // Maze& parent1 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
+      // Maze& parent2 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
+      Maze& parent1 = Util::roulette_selection(populasi);
+      Maze& parent2 = Util::roulette_selection(populasi);
 
       // auto[child1, child2] = Util::simple_arithmetic_crossover(parent1.get_flatten_config(), parent2.get_flatten_config());
       auto[child1, child2] = Util::uniform_biased_crossover(parent1.get_flatten_config(), parent2.get_flatten_config());

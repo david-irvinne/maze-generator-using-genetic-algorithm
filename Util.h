@@ -10,6 +10,7 @@ class Util{
 public :
   void greet(std::string name);
   static Maze& tournament_selection(std::vector<Maze>& populasi, int k = 1); 
+  static Maze& roulette_selection(std::vector<Maze>& populasi) ;
   static Maze& get_best_maze(std::vector<Maze>& populasi);
   static bool check_convergence(std::vector<Maze>& populasi);
 

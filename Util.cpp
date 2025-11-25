@@ -96,6 +96,23 @@ bool Util::check_convergence(std::vector<Maze>& populasi){
   return converges;
 }
 
+Maze& Util::roulette_selection(std::vector<Maze>& populasi) {
+    double total = 0.0;
+    for (auto& m : populasi) total += (1.0 / m.fitness_value);  // fitness kecil = bobot besar
+
+    double r = ((double) rand() / RAND_MAX) * total;
+
+    double cumulative = 0.0;
+    for (auto& m : populasi) {
+        cumulative += (1.0 / m.fitness_value);
+        if (cumulative >= r) {
+            return m;
+        }
+    }
+    return populasi.back();
+}
+
+
 void Util::mutate_bitflip(std::vector<short>& chrom,
                           double p_cell,
                           double p_big_mut)
