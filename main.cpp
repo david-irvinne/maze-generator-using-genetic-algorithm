@@ -31,12 +31,13 @@ int main() {
       auto[child1, child2] = Util::uniform_biased_crossover(parent1.get_flatten_config(), parent2.get_flatten_config());
 
       // mutate here
-
+      Util::mutate_bitflip(child1, 0.02, 0.1);
+      Util::mutate_bitflip(child2, 0.02, 0.1);
       // mutate ends here
 
       new_populasi.push_back(Maze(child1, ROW_SIZE, COL_SIZE));
-      if(new_populasi.size() < populasi.size()){
-        new_populasi.push_back(Maze(child1, ROW_SIZE, COL_SIZE));
+      if (new_populasi.size() < populasi.size()) {
+          new_populasi.push_back(Maze(child2, ROW_SIZE, COL_SIZE));
       }
     }
     

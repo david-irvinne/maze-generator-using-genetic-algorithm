@@ -22,6 +22,11 @@ public :
     std::vector<short> parent1,
     std::vector<short> parent2
   );
+  static void mutate_bitflip(
+    std::vector<short>& chrom,
+    double p_cell = 0.02,
+    double p_big_mut = 0.1
+  );
 
 private:
 

@@ -96,3 +96,27 @@ bool Util::check_convergence(std::vector<Maze>& populasi){
   return converges;
 }
 
+void Util::mutate_bitflip(std::vector<short>& chrom,
+                          double p_cell,
+                          double p_big_mut)
+{
+    int n = static_cast<int>(chrom.size());
+    for (int i = 0; i < n; ++i) {
+        double u = static_cast<double>(std::rand()) / RAND_MAX;
+        if (u < p_cell) {
+            // with small probability, do a "big" mutation: random wall mask
+            double v = static_cast<double>(std::rand()) / RAND_MAX;
+            if (v < p_big_mut) {
+                chrom[i] = static_cast<short>((std::rand() % 15) + 1); // 1..15
+            } else {
+                // bit-flip mutation on one randomly chosen wall bit
+                int bit = std::rand() % 4;            // 0..3
+                chrom[i] ^= static_cast<short>(1 << bit);
+                // clamp to [1,15] just in case we get 0
+                if (chrom[i] < 1)  chrom[i] = 1;
+                if (chrom[i] > 15) chrom[i] = 15;
+            }
+        }
+    }
+}
+
