@@ -15,6 +15,7 @@
 class Maze {
 public:
   int ROW, COL;
+  int number_of_different_path;
   double fitness_value = -1.0;
   Maze();
   Maze(int row, int col); // maze dari row dan column baru

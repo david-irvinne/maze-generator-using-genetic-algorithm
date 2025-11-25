@@ -3,8 +3,9 @@
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
 Maze::Maze() {
-    ROW = 0;
-    COL = 0;
+  ROW = 0;
+  COL = 0;
+  number_of_different_path = 0;
 }
 
 void Maze::update_fitness_value(){
@@ -15,6 +16,7 @@ Maze::Maze(int row, int col){
   ROW = row;
   COL = col;
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
+  number_of_different_path = 0;
   
   // isi dengan random config yang punya solusi
   fill_with_random_config();
@@ -31,6 +33,7 @@ Maze::Maze(std::vector<short>source, int row, int col){
   ROW = row;
   COL = col;
   grid = std::vector<std::vector<short>>(ROW, std::vector<short>(COL));
+  number_of_different_path = 0;
   for(int i = 0, k = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
       grid[i][j] = source[k];
@@ -163,42 +166,52 @@ void Maze::repair(){
 }
 
 int Maze::get_min_distance(){
-  const int INF = 1e9;
-  std::vector<std::vector<int>> dist(ROW, std::vector<int>(COL, INF));
-  std::vector<std::vector<bool>> vis(ROW, std::vector<bool>(COL));
+    const int INF = 1e9;
 
-  dist[0][0] = 0;
-  std::queue<std::array<int, 2>> q;
-  q.push({0, 0});
-  while(!q.empty()){
-    auto[now_r, now_c] = q.front();
-    q.pop();
-    if(vis[now_r][now_c]) continue;
+    // normal BFS distance
+    std::vector<std::vector<int>> dist(ROW, std::vector<int>(COL, INF));
 
-    vis[now_r][now_c] = true;
-    // coba pergi ke atas
-    if(!has_top_wall(grid[now_r][now_c])) {
-      q.push({now_r - 1, now_c});
-      dist[now_r - 1][now_c] = std::min(dist[now_r - 1][now_c], dist[now_r][now_c] + 1);
-    }
-    // coba pergi ke bawah
-    if(!has_bot_wall(grid[now_r][now_c])) {
-      q.push({now_r + 1, now_c});
-      dist[now_r + 1][now_c] = std::min(dist[now_r + 1][now_c], dist[now_r][now_c] + 1);
-    }
-    // coba pergi ke kanan
-    if(!has_right_wall(grid[now_r][now_c])) {
-      q.push({now_r , now_c + 1});
-      dist[now_r][now_c + 1] = std::min(dist[now_r][now_c + 1], dist[now_r][now_c] + 1);
-    }
-    // coba pergi ke kiri 
-    if(!has_left_wall(grid[now_r][now_c])) {
-      q.push({now_r , now_c - 1});
-      dist[now_r][now_c - 1] = std::min(dist[now_r][now_c - 1], dist[now_r][now_c] + 1);
-    }
-  }
+    // tambahan untuk menghitung banyak jalur
+    std::vector<std::vector<int>> ways(ROW, std::vector<int>(COL, 0));
 
-  return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
+    std::vector<std::vector<bool>> vis(ROW, std::vector<bool>(COL, false));
+
+    dist[0][0] = 0;
+    ways[0][0] = 1; // hanya 1 cara untuk memulai dari start
+
+    std::queue<std::array<int, 2>> q;
+    q.push({0, 0});
+
+    while(!q.empty()){
+        auto [now_r, now_c] = q.front();
+        q.pop();
+
+        if(vis[now_r][now_c]) continue;
+        vis[now_r][now_c] = true;
+
+        auto try_move = [&](int next_r, int next_c){
+            if(next_r < 0 || next_r >= ROW || next_c < 0 || next_c >= COL) return; // out of bounds
+
+            if(dist[next_r][next_c] > dist[now_r][now_c] + 1){
+                dist[next_r][next_c] = dist[now_r][now_c] + 1;
+                ways[next_r][next_c] = ways[now_r][now_c]; // copy jumlah cara
+                q.push({next_r, next_c});
+            }
+            // jika jaraknya sama → berarti ada jalur alternatif ke sana
+            else if(dist[next_r][next_c] == dist[now_r][now_c] + 1){
+                ways[next_r][next_c] += ways[now_r][now_c];
+            }
+        };
+
+        if(!has_top_wall(grid[now_r][now_c]))   try_move(now_r - 1, now_c);
+        if(!has_bot_wall(grid[now_r][now_c]))   try_move(now_r + 1, now_c);
+        if(!has_right_wall(grid[now_r][now_c])) try_move(now_r, now_c + 1);
+        if(!has_left_wall(grid[now_r][now_c]))  try_move(now_r, now_c - 1);
+    }
+
+    number_of_different_path = ways[ROW-1][COL-1];
+
+    return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
 double Maze::fitness() {
@@ -268,7 +281,6 @@ double Maze::fitness() {
       }
     }
   }
-
   int D = dist[GR][GC];
   if (D == INF) {
     return 0;

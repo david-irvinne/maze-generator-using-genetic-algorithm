@@ -7,7 +7,7 @@
 
 const int ROW_SIZE = 12, COL_SIZE = 12;
 const int INIT_POPULATION_SIZE = 32;
-const int MAX_GENERATION = 16;
+const int MAX_GENERATION = 32;
 
 int main() {
   // buat random bisa dipakai berkali kali
@@ -54,7 +54,8 @@ int main() {
     std::cout << "hasil terbaik dari gen " << GEN << ":\n";
     Maze& best_maze = Util::get_best_maze(populasi);
     best_maze.print();
-    std::cout << "BEST FITNESS: " << best_maze.fitness_value << "\n\n";
+    std::cout << "BEST FITNESS: " << best_maze.fitness_value << "\n";
+    std::cout << "NUMBER OF DIFFERENT PATH: " << best_maze.number_of_different_path << "\n\n";
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
