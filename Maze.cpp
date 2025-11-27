@@ -6,10 +6,11 @@ Maze::Maze() {
   ROW = 0;
   COL = 0;
   number_of_different_path = 0;
+  avg_steps_taken = 0;
 }
 
 void Maze::update_fitness_value(){
-  fitness_value = fitness2();
+  fitness_value = fitness_dfs();
 }
 
 Maze::Maze(int row, int col){
@@ -17,6 +18,7 @@ Maze::Maze(int row, int col){
   COL = col;
   grid = std::vector<std::vector<short>>(ROW,  std::vector<short>(COL));
   number_of_different_path = 0;
+  avg_steps_taken = 0;
   
   // isi dengan random config yang punya solusi
   fill_with_random_config();
@@ -34,6 +36,7 @@ Maze::Maze(std::vector<short>source, int row, int col){
   COL = col;
   grid = std::vector<std::vector<short>>(ROW, std::vector<short>(COL));
   number_of_different_path = 0;
+  avg_steps_taken = 0;
   for(int i = 0, k = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
       grid[i][j] = source[k];
@@ -108,7 +111,6 @@ void Maze::fill_with_random_config(){
 void Maze::normalize(){
   for(int i = 0; i < ROW; i++){
     for(int j = 0; j < COL; j++){
-
 
       // kalau punya tetangga kanan
       if(j + 1 < COL){
@@ -214,7 +216,7 @@ int Maze::get_min_distance(){
     return (dist[ROW-1][COL-1] == INF ? -1 : dist[ROW-1][COL-1]);
 }
 
-double Maze::fitness() {
+double Maze::fitness_bfs() {
   if (ROW == 0 || COL == 0) return 1;    // not shaped
   if(get_min_distance() == -1) return 1; // no solution
 
@@ -383,7 +385,7 @@ double Maze::fitness() {
   // return 1.0 * (upper_bound - scaled) / upper_bound;
 }
 
-double Maze::fitness2() {
+double Maze::fitness_dfs() {
   if (ROW == 0 || COL == 0) return 1.0;
   if (get_min_distance() == -1) return 1.0; // tidak solvable
 
@@ -402,7 +404,7 @@ double Maze::fitness2() {
   // RNG (lebih baik daripada rand())
   std::mt19937 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
-  auto simulate = [&](int max_steps = 100000) {
+  auto simulate = [&](int max_steps = 10000) {
     std::stack<std::pair<int,int>> path;
     std::set<std::pair<int,int>> visited;
 
@@ -443,11 +445,12 @@ double Maze::fitness2() {
     total_steps += simulate();
   }
   double cost_value = total_steps / TRIALS;
+  avg_steps_taken = cost_value;
 
   // Hitung fitness berbasis target kesulitan menengah
   double lower_bound = (double)(ROW + COL - 1);            // minimal mungkin (jalur lurus)
   double upper_bound = (double)(ROW * COL * 1.8);             // perkiraan atas: banyak backtrack
-  double mid = (lower_bound + upper_bound) / 2.0;
+  double mid = (lower_bound + upper_bound) / 2;
 
   double fitness = std::fabs(cost_value - mid) / mid;
   if (fitness > 1.0) fitness = 1.0;

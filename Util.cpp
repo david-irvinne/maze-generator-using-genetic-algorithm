@@ -4,9 +4,9 @@
 #include<vector>
 #include<algorithm>
 
-void Util::greet(std::string name) {
-    std::cout << "Hello, " << name << "!" << std::endl;
-}
+std::vector<double> Util::fitness_summary;
+std::vector<int>    Util::path_number_summary;
+std::vector<double> Util::avg_step_summary;
 
 std::pair<std::vector<short>, std::vector<short>> Util::simple_arithmetic_crossover(std::vector<short>parent1, std::vector<short>parent2){
   int sz = parent1.size();
@@ -165,3 +165,39 @@ void Util::elitism(int ELITISM_SIZE,
 
   new_populasi.clear();  
 }
+
+void Util::fill_population(std::vector<Maze> &populasi, 
+                           int ROW_SIZE, int COL_SIZE){
+  int idx = 0;
+  for(auto& individu: populasi){
+    individu = Maze(ROW_SIZE, COL_SIZE);
+    std::cout << "fitness value individu " << ++idx << ": ";
+    std::cout << individu.fitness_value << '\n';
+  }
+  std::cout << "\n\n";
+
+}
+
+void Util::print_current_gen_summary(std::vector<Maze>&populasi, int GEN){
+  std::cout << "hasil terbaik dari gen " << GEN << ":\n";
+  Maze& best_maze = Util::get_best_maze(populasi);
+  best_maze.print();
+  std::cout << "BEST FITNESS: " << best_maze.fitness_value << "\n";
+  std::cout << "NUMBER OF DIFFERENT SHORTEST PATH: " << best_maze.number_of_different_path << "\n";
+  std::cout << "AVG STEPS TAKEN: " << best_maze.avg_steps_taken << "\n\n";
+
+  fitness_summary.push_back(best_maze.fitness_value);
+  path_number_summary.push_back(best_maze.number_of_different_path);
+  avg_step_summary.push_back(best_maze.avg_steps_taken);
+}
+
+void Util::print_summary(){
+  for(int i = 0; i < (int)fitness_summary.size(); i++){
+    std::cout << "Generation " << i << " : \n";
+    std::cout << "Best Fitness Value: " << fitness_summary[i] << "\n";
+    std::cout << "Number of Different Shortest Paths: " << path_number_summary[i] << "\n";
+    std::cout << "Average Steps Taken: " << avg_step_summary[i] << "\n\n";
+  }
+}
+
+

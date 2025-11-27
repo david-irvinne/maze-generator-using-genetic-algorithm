@@ -15,7 +15,8 @@
 class Maze {
 public:
   int ROW, COL;
-  int number_of_different_path;
+  int number_of_different_path ;
+  double avg_steps_taken;
   double fitness_value = -1.0;
   Maze();
   Maze(int row, int col); // maze dari row dan column baru
@@ -28,8 +29,8 @@ public:
   void repair();
   void update_fitness_value();
   int get_min_distance();
-  double fitness();
-  double fitness2();
+  double fitness_bfs();
+  double fitness_dfs();
   std::vector<short> get_flatten_config();
 
 private:
