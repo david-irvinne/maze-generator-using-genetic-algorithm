@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include<vector>
+#include<algorithm>
 
 void Util::greet(std::string name) {
     std::cout << "Hello, " << name << "!" << std::endl;
@@ -15,6 +16,7 @@ std::pair<std::vector<short>, std::vector<short>> Util::simple_arithmetic_crosso
   int K = std::rand() % sz; 
   // choose random a (factor untuk crossover)
   float a = (float)std::rand() / RAND_MAX;
+
   for(int i = 0; i < sz; i++){
     if(i < K) continue; // tidak ada crossover
     else {
@@ -137,3 +139,29 @@ void Util::mutate_bitflip(std::vector<short>& chrom,
     }
 }
 
+void Util::elitism(int ELITISM_SIZE,
+                   std::vector<Maze>& populasi,
+                   std::vector<Maze>& new_populasi){
+  if (ELITISM_SIZE <= 0){
+    populasi = new_populasi;
+    new_populasi.clear();
+    return;   // tidak ada elitism
+  }
+
+  std::vector<Maze> old_pop = populasi;
+
+  std::sort(old_pop.begin(), old_pop.end(), [&](Maze a, Maze b){
+    return a.fitness_value < b.fitness_value;  // ascending (terbaik di depan)
+  });
+
+  populasi = new_populasi;
+  std::sort(populasi.begin(), populasi.end(), [&](Maze a, Maze b){
+    return a.fitness_value > b.fitness_value;
+  });
+
+  for (int i = 0; i < std::min(ELITISM_SIZE, (int)old_pop.size()); i++) {
+    populasi[i] = old_pop[i];   // replace individu terburuk
+  }
+
+  new_populasi.clear();  
+}

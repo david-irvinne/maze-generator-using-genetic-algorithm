@@ -18,7 +18,6 @@ public :
     std::vector<short>parent1, 
     std::vector<short>parent2
   );
-
   static std::pair<std::vector<short>, std::vector<short>> uniform_biased_crossover(
     std::vector<short> parent1,
     std::vector<short> parent2
@@ -28,6 +27,10 @@ public :
     double p_cell = 0.02,
     double p_big_mut = 0.1
   );
+
+  static void elitism(int ELITISM_SIZE,
+                    std::vector<Maze>& populasi,
+                    std::vector<Maze>& new_populasi);
 
 private:
 

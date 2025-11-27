@@ -6,8 +6,9 @@
 #define dbg(x) std::cout << "["<< #x <<"] : "<< (x) <<std::endl;
 
 const int ROW_SIZE = 12, COL_SIZE = 12;
-const int INIT_POPULATION_SIZE = 32;
+const int INIT_POPULATION_SIZE = 64;
 const int MAX_GENERATION = 32;
+const int ELITISM_SIZE = 2; 
 
 int main() {
   // buat random bisa dipakai berkali kali
@@ -24,10 +25,10 @@ int main() {
   std::vector<Maze> new_populasi;
   for(int GEN = 0; GEN < MAX_GENERATION; GEN++){
     while(new_populasi.size() < populasi.size()){
-      // Maze& parent1 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
-      // Maze& parent2 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 10);
-      Maze& parent1 = Util::roulette_selection(populasi);
-      Maze& parent2 = Util::roulette_selection(populasi);
+      Maze& parent1 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 2);
+      Maze& parent2 = Util::tournament_selection(populasi, INIT_POPULATION_SIZE / 2);
+      // Maze& parent1 = Util::roulette_selection(populasi);
+      // Maze& parent2 = Util::roulette_selection(populasi);
 
       // auto[child1, child2] = Util::simple_arithmetic_crossover(parent1.get_flatten_config(), parent2.get_flatten_config());
       auto[child1, child2] = Util::uniform_biased_crossover(parent1.get_flatten_config(), parent2.get_flatten_config());
@@ -43,8 +44,10 @@ int main() {
       }
     }
     
-    populasi = new_populasi;
-    new_populasi.clear();
+    // ELITISM, klo size nya 0 jadi update populasi biasa
+    Util::elitism(ELITISM_SIZE, populasi, new_populasi);
+    // populasi = new_populasi;
+    // new_populasi.clear();
 
     bool all_converges = Util::check_convergence(populasi);
     dbg(all_converges);

@@ -377,7 +377,7 @@ double Maze::fitness() {
   const double N2 = 1.0 * ROW * ROW;
   const double score_upper_excl = 4.9 - 4.6 / N2 - 0.9 / (N2 - 1.0); // strictly greater-than ceiling
   const int upper_bound = static_cast<int>(std::ceil(score_upper_excl * 1000.0) - 1.0);
-  const double mid = (upper_bound) / 2.0;
+  // const double mid = (upper_bound) / 2.0;
   // return 1.0 * abs(scaled - mid) / mid ;
   return 1.0 * scaled / upper_bound;
   // return 1.0 * (upper_bound - scaled) / upper_bound;
