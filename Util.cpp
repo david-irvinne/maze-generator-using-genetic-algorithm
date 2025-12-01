@@ -4,9 +4,10 @@
 #include<vector>
 #include<algorithm>
 
-std::vector<double> Util::fitness_summary;
+std::vector<double> Util::best_fitness_summary;
 std::vector<int>    Util::path_number_summary;
 std::vector<double> Util::avg_step_summary;
+std::vector<double> Util::avg_fitness_summary;
 
 std::pair<std::vector<short>, std::vector<short>> Util::simple_arithmetic_crossover(std::vector<short>parent1, std::vector<short>parent2){
   int sz = parent1.size();
@@ -179,25 +180,39 @@ void Util::fill_population(std::vector<Maze> &populasi,
 }
 
 void Util::print_current_gen_summary(std::vector<Maze>&populasi, int GEN){
-  std::cout << "hasil terbaik dari gen " << GEN << ":\n";
   Maze& best_maze = Util::get_best_maze(populasi);
+
+  std::cout << "hasil terbaik dari gen " << GEN << ":\n";
   best_maze.print();
+  best_fitness_summary.push_back(best_maze.fitness_value);
+  path_number_summary.push_back(best_maze.number_of_different_path);
+  avg_step_summary.push_back(best_maze.avg_steps_taken);
+  avg_fitness_summary.push_back(Util::get_avg_fitness(populasi));
+
   std::cout << "BEST FITNESS: " << best_maze.fitness_value << "\n";
+  std::cout << "AVG FITNESS: " << avg_fitness_summary.back() << '\n';
   std::cout << "NUMBER OF DIFFERENT SHORTEST PATH: " << best_maze.number_of_different_path << "\n";
   std::cout << "AVG STEPS TAKEN: " << best_maze.avg_steps_taken << "\n\n";
 
-  fitness_summary.push_back(best_maze.fitness_value);
-  path_number_summary.push_back(best_maze.number_of_different_path);
-  avg_step_summary.push_back(best_maze.avg_steps_taken);
 }
 
 void Util::print_summary(){
-  for(int i = 0; i < (int)fitness_summary.size(); i++){
+  for(int i = 0; i < (int)best_fitness_summary.size(); i++){
     std::cout << "Generation " << i << " : \n";
-    std::cout << "Best Fitness Value: " << fitness_summary[i] << "\n";
+    std::cout << "Best Fitness Value: " << best_fitness_summary[i] << "\n";
+    std::cout << "Average Fitness in This Generation: " << avg_fitness_summary[i] << '\n';
+    std::cout << "Average Steps Taken: " << avg_step_summary[i] << "\n";
     std::cout << "Number of Different Shortest Paths: " << path_number_summary[i] << "\n";
-    std::cout << "Average Steps Taken: " << avg_step_summary[i] << "\n\n";
+    std::cout << "\n";
   }
 }
 
+double Util::get_avg_fitness(std::vector<Maze> &populasi){
+  double res = 0;
+  for(auto& m : populasi){
+    res += m.fitness_value;
+  }
+  res /= populasi.size();
+  return res;
+}
 

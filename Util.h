@@ -31,13 +31,17 @@ public :
   static void elitism(int ELITISM_SIZE,
                     std::vector<Maze>& populasi,
                     std::vector<Maze>& new_populasi);
+  
+  static double get_avg_fitness(std::vector<Maze>&populasi);
+
   static void print_current_gen_summary(std::vector<Maze>&population, int GEN);
 
   static void print_summary();
 
-  static std::vector<double> fitness_summary;
+  static std::vector<double>best_fitness_summary;
   static std::vector<int> path_number_summary;
   static std::vector<double>avg_step_summary;
+  static std::vector<double>avg_fitness_summary;
 private:
 
 };
