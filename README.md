@@ -125,16 +125,16 @@ Kode ini mendukung berbagai konfigurasi eksperimen algoritma genetika, antara la
 
 ## 📌 Catatan
 
-Pastikan sistem memiliki compiler **g++** yang mendukung standar **C++20**.
+Pastikan sistem memiliki compiler **g++** yang mendukung standar **C++20**.  
 Gunakan opsi kompilasi tambahan pada `cc.sh` bila diperlukan untuk debugging atau profiling.
 
 ---
 
 ## 🧬 Deskripsi Ekstra 
 
-Tugas akhir Mata Kuliah **Genetika Algoritma**, Semester Genap 2025.
-Dosen Pembimbing: Aina Musdholifah, S.Kom., M.Kom., Ph.D.
-Link Paper: https://github.com/david-irvinne/maze-generator-using-genetic-algorithm
+Tugas akhir Mata Kuliah **Genetika Algoritma**, Semester Genap 2025.  
+Dosen Pembimbing: Aina Musdholifah, S.Kom., M.Kom., Ph.D.  
+Link Paper: https://github.com/david-irvinne/maze-generator-using-genetic-algorithm  
 
 **Anggota Kelompok:**
 
